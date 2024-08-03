@@ -1,61 +1,60 @@
 import supabase from "../config/supabase.config.js";
+import Events from "../models/event.modle.js";
 
 export const getAllEvents = async (req, res) => {
-  const { data, error } = await supabase.from("events").select("*");
-
-  if (error) {
-    throw error;
+  try {
+    const data = await Events.find();
+    res.json(data);
+  } catch (error) {
+    console.log(error);
   }
-
-  res.json(data);
 };
 
 export const createEvent = async (req, res) => {
-  const { title, description } = req.body;
-  if (!title || !description) {
-    return res
-      .status(400)
-      .json({ error: " title and description are required" });
+  const { title, description, date, time, location } = req.body;
+  try {
+    if (!title || !description) {
+      return res
+        .status(400)
+        .json({ error: " title and description are required" });
+    }
+    const newEvent = {
+      title,
+      description,
+      date,
+      time,
+      location,
+    };
+    const data = await Events.create(newEvent);
+
+    res.json(data);
+  } catch (error) {
+    console.log(error);
   }
-
-  const { data, error } = await supabase
-    .from("events")
-    .insert({ title, description });
-
-  if (error) {
-    throw error;
-  }
-
-  res.json(data);
 };
 
 export const getSingleEvent = async (req, res) => {
   const { id } = req.params;
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const data = await Events.findById(id);
 
-  if (error) {
-    throw error;
+    res.json(data);
+  } catch (error) {
+    console.log(error);
   }
-
-  res.json(data);
 };
 
 export const updateEvent = async (req, res) => {
   const { id } = req.params;
-  const { title, description } = req.body;
+  const { title, description, location, date, time } = req.body;
   const toBeupdated = {};
   if (title) toBeupdated.title = title;
   if (description) toBeupdated.description = description;
-  toBeupdated.updated_at = Date.now();
+  if (date) toBeupdated.date = date;
+  if (time) toBeupdated.time = time;
+  if (location) toBeupdated.location = location;
   try {
-    const { data, error } = await supabase
-      .from("events")
-      .update(toBeupdated)
-      .eq("id", id);
+    const data = await Events.findByIdAndUpdate(id, toBeupdated);
     res.status(200).json(data);
     if (err) {
       throw error;
@@ -68,14 +67,9 @@ export const updateEvent = async (req, res) => {
 export const deleteEvent = async (req, res) => {
   const { id } = req.params;
   try {
-    const { data, error } = await supabase.from("events").delete().eq("id", id);
-
-    if (error) {
-      throw error;
-    }
+    await Events.findByIdAndDelete(id);
+    res.status(202).send("deleted succesfully");
   } catch (error) {
     console.log(error);
   }
-
-  res.status(202).send("deleted succesfully");
 };

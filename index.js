@@ -7,6 +7,7 @@ import {
   signupController,
 } from "./controllers/auth.controller.js";
 import eventsRouter from "./routes/events.route.js";
+import { connectDB } from "./config/mongoDB.js";
 
 dotenv.config();
 
@@ -23,6 +24,16 @@ app.post("/login", loginController);
 
 app.use("/api/v1/events", eventsRouter);
 
-app.listen(PORT, () => {
-  console.log(`app is listening at port ${PORT}`);
-});
+const connectDbAndServer = () => {
+  try {
+    connectDB();
+    app.listen(PORT, () => {
+      console.log(`app is listening at port ${PORT}`);
+    });
+  } catch (error) {
+    console.log(error);
+    process.exit(1);
+  }
+};
+
+connectDbAndServer();
